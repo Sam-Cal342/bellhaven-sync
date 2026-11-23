@@ -18,7 +18,7 @@ python -m venv .venv
 .venv/Scripts/activate            # Windows   (source .venv/bin/activate on macOS/Linux)
 pip install -r requirements.txt
 cp .env.example .env              # then put your CRM token in .env
-python -m pytest -q               # 13 tests, use an in-memory fake CRM (no network)
+python -m pytest -q               # 14 tests, use an in-memory fake CRM (no network)
 python -m bhsync.pipeline --dry-run   # see what would be proposed, change nothing
 python app.py                     # review app on http://127.0.0.1:5000 -> "Run pipeline now"
 ```

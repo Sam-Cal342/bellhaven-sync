@@ -38,6 +38,7 @@ I used Claude Code as the builder and acted as the reviewer and decision-maker:
   - The first version of the scraper logic would have missed Findlay, because the directory lists 34 of 35 communities.
   - Name similarity was inflated by the shared word "Bellhaven", which surfaced irrelevant candidates. Fixed by ignoring the brand word.
   - An operator-precedence bug in the display code, and a test that recursed into itself, were both caught before they mattered.
+  - During my own review of the queue, the Kettering duplicate cards said the survivor "already sits under Bellhaven", but it's under Harborview. The choice was right; the explanation was wrong, because it reused the Bellhaven wording for any higher-ranked parent. The explanation now follows the same ranking as the decision, and a test pins it.
 - **I did the review myself in the app.** The AI built the queue, and every write to the CRM was my decision.
 
 ## What I'd build next

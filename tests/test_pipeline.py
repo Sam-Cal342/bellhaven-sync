@@ -68,6 +68,18 @@ def test_every_case_is_classified_as_expected():
     assert not r.warnings
 
 
+def test_duplicate_reason_matches_the_ranking_actually_used():
+    crm = FakeCRM()
+    r = build_proposals(_locations(), crm.list_accounts(), crm.list_contacts())
+    why = {p.account_id: next(e for e in p.evidence if e.startswith("Keeping"))
+           for p in r.proposals if p.kind == DUPLICATE and p.location_slug}
+    # Kettering's survivor is under Harborview (a predecessor), not Bellhaven - the reason must say so
+    for loser in ("001B7XZAA3AFALS9GP", "0016KTS1UAWBRXS09J"):
+        assert "Harborview" in why[loser] and "already sits under Bellhaven" not in why[loser]
+    assert "already sits under Bellhaven" in why["00159PL81N38KM4FHM"]          # Monroe: survivor is under Bellhaven
+    assert "stronger match" in why["001QU150PM4Z15UA71"]                       # Owosso: same parent, 1 contact each
+
+
 # ---------------- end-to-end: approve everything, then re-run ----------------
 def test_approve_all_then_rerun_is_clean(env):
     store, crm = env

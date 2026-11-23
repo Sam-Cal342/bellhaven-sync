@@ -196,6 +196,28 @@ def _survivor_key(c: Candidate, rank: dict[str, int], contacts_by: dict[str, lis
             len(contacts_by.get(a["account_id"], [])), c.score, a.get("status") == "Active")
 
 
+def _survivor_reason(surv: Candidate, loser: Candidate, rank: dict[str, int], contacts_by: dict[str, list],
+                     target_id: str) -> str:
+    """Explain the first element of _survivor_key that separates the two, in the same order."""
+    a, la = surv.account, loser.account
+    if (a.get("lifetime_revenue") or 0) > 0 and not (la.get("lifetime_revenue") or 0) > 0:
+        return "survivor has billing history"
+    ra, rl = rank.get(a.get("parent_id"), 0), rank.get(la.get("parent_id"), 0)
+    if ra > rl:
+        if a.get("parent_id") == target_id:
+            return "survivor already sits under Bellhaven"
+        loser_parent = f"this account's parent ({la['parent_name']})" if la.get("parent_name") else "an account with no parent"
+        return (f"survivor's parent, {a.get('parent_name')}, is a company Bellhaven acquired communities from "
+                f"and ranks above {loser_parent}")
+    if ra == rl:
+        na, nl = len(contacts_by.get(a["account_id"], [])), len(contacts_by.get(la["account_id"], []))
+        if na > nl:
+            return "survivor has more contacts"
+        if na == nl and surv.score > loser.score:
+            return "survivor is the stronger match to the website"
+    return "survivor is the active account" if a.get("status") == "Active" else "survivor ranked higher on the tie-breakers"
+
+
 # --------------------------------------------------------------------------------------------
 # Main entry point
 # --------------------------------------------------------------------------------------------
@@ -278,10 +300,7 @@ def build_proposals(locations, accounts: list[dict], contacts: list[dict], today
         # 2a) Extra accounts for the same facility
         for loser in group[1:]:
             la = loser.account
-            reason = ("survivor has billing history" if (a.get("lifetime_revenue") or 0) > 0 and not (la.get("lifetime_revenue") or 0) > 0
-                      else "survivor already sits under Bellhaven" if rank.get(a.get("parent_id"), 0) > rank.get(la.get("parent_id"), 0)
-                      else "survivor has more contacts" if len(acct_contacts) > len(contacts_by.get(la["account_id"], []))
-                      else "survivor is the stronger match to the website")
+            reason = _survivor_reason(surv, loser, rank, contacts_by, target_id)
             dev = [site_ev, f"Both accounts match this location: {', '.join(loser.signals)}",
                    f"Keeping {a['name']} ({aid}) because {reason}",
                    f"This account: revenue {_money(la.get('lifetime_revenue'))}, AR {_money(la.get('outstanding_ar'))}, "

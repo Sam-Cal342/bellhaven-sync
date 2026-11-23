@@ -28,3 +28,4 @@ Running log of decisions, AI mistakes caught, and verification. Feeds the writeu
 - Operator-precedence bug in the before/after display code (`x or y if c else z`). Rewritten explicitly.
 - The app test's monkeypatch recursed into itself, which made the queue look empty. Fixed by keeping a reference to the original.
 - Duplicate losers with contacts would leave those contacts on an inactive account. The proposal now warns the reviewer.
+- Pre-demo review: the Kettering duplicate cards gave the reason "survivor already sits under Bellhaven", but the survivor is under Harborview (ranked as a predecessor). The decision was right, but the reason text didn't follow the ranking. Fixed in `_survivor_reason`, added a test (14 passing), and re-ran the pipeline: 0 new, 29 refreshed, 0 superseded.
