@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Coverage{% endblock %}
+{% block content %}
+<h2>Coverage of the last run</h2>
+{% if not last_run %}<p>No runs yet.</p>{% else %}
+<p class="muted">Run #{{ last_run.id }} ({{ last_run.status }}): every website location and every CRM account that claims to be Bellhaven, with what the matcher concluded. Rows marked "confident match - no change" needed no proposal.</p>
+{% if last_run.warnings %}<div class="flash info">{% for w in last_run.warnings %}{{ w }}<br>{% endfor %}</div>{% endif %}
+<table class="card" style="background:#fff">
+  <tr><th>Website location</th><th>CRM account</th><th>Result</th></tr>
+  {% for c in last_run.coverage %}
+  <tr>
+    <td>{% if c.location %}{{ c.location }}{% else %}<span class="muted">— not on website —</span>{% endif %}</td>
+    <td>{% if c.account_id %}<a href="{{ crm_link(c.account_id) }}" target="_blank">{{ c.crm_name or c.account_id }}</a>{% else %}<span class="muted">none</span>{% endif %}</td>
+    <td>{{ c.result }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,66 @@
+{% set p = item.payload %}
+<div class="card" id="p{{ item.id }}">
+  <div class="head">
+    <span class="badge k-{{ p.kind }}">{{ KIND_LABELS[p.kind] }}</span>
+    <h3>{{ p.title }}</h3>
+    <span class="small conf-{{ p.confidence }}">{{ p.confidence }} confidence{% if p.score %} · match score {{ p.score }}{% endif %}</span>
+    {% if item.status != 'pending' %}<span class="status s-{{ item.status }}">{{ item.status|upper }}</span>{% endif %}
+    <span class="small muted" style="margin-left:auto">#{{ item.id }} · <code>{{ item.fingerprint }}</code></span>
+  </div>
+  <div class="body">
+    <div>
+      <p style="margin-top:0">{{ p.summary }}</p>
+      {% if p.sop %}
+      <div class="sop">
+        <b>Billing SOP check</b> — {{ p.sop.from_parent }} → {{ p.sop.to_parent }}<br>
+        Lifetime revenue <b>${{ '{:,.0f}'.format(p.sop.lifetime_revenue) }}</b> · Outstanding AR <b>${{ '{:,.0f}'.format(p.sop.outstanding_ar) }}</b>
+        → {% if p.sop.chow_required %}<b>CHOW required: old account preserved</b>{% else %}direct re-parent allowed{% endif %}
+        <div class="small">{{ p.sop.rule }}</div>
+      </div>
+      {% endif %}
+      {% set existing = p.display|selectattr('target','equalto','existing account')|list %}
+      {% set newacct = p.display|selectattr('target','equalto','new account')|list %}
+      {% if existing %}
+      <table>
+        <tr><th>{{ 'Old account' if p.kind=='chow' else 'Field' }}</th><th>CRM now</th><th>After approval</th></tr>
+        {% for r in existing %}<tr><td>{{ r.field }}</td><td class="before">{{ r.before }}</td><td class="after">{{ r.after }}</td></tr>{% endfor %}
+      </table>
+      {% endif %}
+      {% if newacct %}
+      <p class="small muted" style="margin:12px 0 4px"><b>New account to create</b></p>
+      <table>{% for r in newacct %}<tr><td style="width:30%">{{ r.field }}</td><td class="after">{{ r.after }}</td></tr>{% endfor %}</table>
+      {% endif %}
+      {% if item.result and item.result.error %}<div class="flash error" style="margin-top:10px">{{ item.result.error }}</div>{% endif %}
+    </div>
+    <div>
+      <b>Evidence</b>
+      <ul class="ev">{% for e in p.evidence %}<li>{{ e }}</li>{% endfor %}</ul>
+      {% if p.website %}<div class="small" style="margin-top:6px"><a href="{{ p.website.url }}" target="_blank">Open website listing ↗</a></div>{% endif %}
+      {% for a in p.accounts %}
+      <div class="acct">
+        <div class="role">{{ a.role }}</div>
+        <a href="{{ crm_link(a.account_id) }}" target="_blank">{{ a.name }}</a> <span class="muted small">{{ a.account_id }}</span><br>
+        {{ a.billing_street }}, {{ a.billing_city }}, {{ a.billing_state }} {{ a.billing_zip }} · {{ a.care_type or 'no care type' }} · {{ a.status }}<br>
+        <span class="muted">Parent:</span> {{ a.parent_name or 'none' }} · <span class="muted">Rev</span> ${{ '{:,.0f}'.format(a.lifetime_revenue or 0) }} · <span class="muted">AR</span> ${{ '{:,.0f}'.format(a.outstanding_ar or 0) }} · <span class="muted">Phone</span> {{ a.phone or '-' }}
+        {% if a.contacts %}<br><span class="muted">Contacts:</span> {{ a.contacts|join('; ') }}{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% if item.status in ('pending','failed','conflict') %}
+  <form class="actions" method="post" onsubmit="this.querySelectorAll('button').forEach(b=>b.disabled=true)">
+    <input type="text" name="comment" placeholder="Reviewer comment (optional)">
+    <button class="btn primary" formaction="{{ url_for('approve', pid=item.id) }}">Approve &amp; write to CRM</button>
+    <button class="btn reject" formaction="{{ url_for('reject', pid=item.id) }}">Reject</button>
+  </form>
+  {% else %}
+  <div class="actions small">
+    {% if item.decided_by %}{{ item.status|capitalize }} by {{ item.decided_by }} at {{ (item.decided_at or '')[:16].replace('T',' ') }} UTC{% if item.reviewer_comment %} — “{{ item.reviewer_comment }}”{% endif %}{% endif %}
+    {% if item.result.created_account_id %} · created <a href="{{ crm_link(item.result.created_account_id) }}" target="_blank">{{ item.result.created_account_id }}</a>{% endif %}
+    {% if item.account_id %} · <a href="{{ crm_link(item.account_id) }}" target="_blank">view account in CRM ↗</a>{% endif %}
+    {% if item.status == 'rejected' %}
+    <form method="post" action="{{ url_for('reopen', pid=item.id) }}" style="margin-left:auto"><button class="btn">Reopen</button></form>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>

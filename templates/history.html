@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Decided{% endblock %}
+{% block content %}
+<h2>Decided proposals</h2>
+<p class="muted">Approved items were written to the CRM; rejected items are remembered so the daily run never proposes them again. Superseded items were pending when a later run stopped proposing them (the CRM or website changed).</p>
+{% if not items %}<p>No decisions yet.</p>{% endif %}
+{% for item in items %}{% include "_card.html" %}{% endfor %}
+{% endblock %}

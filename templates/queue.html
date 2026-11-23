@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="stats">
+  <div class="stat"><div class="n">{{ counts.get('pending',0) + counts.get('failed',0) + counts.get('conflict',0) }}</div><div class="l">awaiting review</div></div>
+  <div class="stat"><div class="n">{{ counts.get('approved',0) }}</div><div class="l">approved &amp; written</div></div>
+  <div class="stat"><div class="n">{{ counts.get('rejected',0) }}</div><div class="l">rejected</div></div>
+  {% if last_run %}<div class="stat"><div class="n">{{ last_run.locations or '-' }}</div><div class="l">website locations (last run)</div></div>{% endif %}
+</div>
+<div class="filters">
+  <a href="{{ url_for('queue') }}" class="{{ 'on' if not kind }}">All</a>
+  {% for k in KIND_ORDER %}{% if by_kind[k] %}<a href="{{ url_for('queue', kind=k) }}" class="{{ 'on' if kind==k }}">{{ KIND_LABELS[k] }} ({{ by_kind[k] }})</a>{% endif %}{% endfor %}
+</div>
+{% if not items %}
+  <div class="card"><div class="head"><h3>Nothing waiting for review.</h3></div>
+  <div style="padding:14px 18px" class="muted">Run the pipeline to check the website against the CRM. Items you already approved or rejected are never proposed again.</div></div>
+{% endif %}
+{% for item in items %}{% include "_card.html" %}{% endfor %}
+{% endblock %}

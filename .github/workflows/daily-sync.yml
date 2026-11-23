@@ -1,0 +1,49 @@
+# Daily Bellhaven website -> CRM proposal run.
+# The job only READS the website and CRM and queues proposals; it never writes to the CRM.
+# Writes happen only when a reviewer approves a proposal in the review app.
+name: bellhaven-daily-sync
+
+on:
+  schedule:
+    - cron: "0 11 * * *"   # 11:00 UTC = 6:00 AM US Central / 7:00 AM US Eastern, before reps start
+  workflow_dispatch: {}      # allow a manual run from the Actions tab
+
+concurrency:
+  group: bellhaven-sync      # never two runs at once (they share the decision store)
+  cancel-in-progress: false
+
+permissions:
+  contents: write            # to commit the updated decision store back
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Tests (refuse to run the pipeline on a broken build)
+        run: python -m pytest -q
+
+      - name: Run pipeline
+        env:
+          CRM_API_TOKEN: ${{ secrets.CRM_API_TOKEN }}   # repo secret, never committed
+        run: python -m bhsync.pipeline
+
+      # Re-run safety depends on remembering decisions. For this exercise the SQLite decision
+      # store lives in the repo; in production it would be a shared database (e.g. Postgres)
+      # that both this job and the review app point at via BHSYNC_DB / a DATABASE_URL.
+      - name: Persist decision store
+        run: |
+          git config user.name  "bellhaven-sync-bot"
+          git config user.email "bellhaven-sync-bot@users.noreply.github.com"
+          git add data/state.db
+          git diff --cached --quiet || git commit -m "chore: daily Bellhaven sync run [skip ci]"
+          git push

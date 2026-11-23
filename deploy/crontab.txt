@@ -1,0 +1,7 @@
+# Alternative to the GitHub Actions workflow: a plain cron entry on a Linux host.
+# Runs daily at 06:00 server time. flock prevents overlapping runs; output is appended to a log.
+# CRM_API_TOKEN is read from /opt/bellhaven-sync/.env by bhsync/config.py.
+0 6 * * * cd /opt/bellhaven-sync && flock -n /tmp/bellhaven-sync.lock .venv/bin/python -m bhsync.pipeline >> logs/pipeline.log 2>&1
+
+# Windows equivalent (Task Scheduler), run once from Command Prompt (cmd.exe) in the repo folder:
+#   schtasks /Create /TN "Bellhaven CRM sync" /SC DAILY /ST 06:00 /TR "\"%CD%\.venv\Scripts\python.exe\" -m bhsync.pipeline"
