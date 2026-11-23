@@ -1,12 +1,10 @@
 # Writeup — Bellhaven ownership sync
 
-> Draft. Edit freely; the time spent figure and any review decisions still need to be filled in.
-
 ## Result
 - **35** Bellhaven communities on the website (34 in the directory plus Findlay, which is linked only from a home-page announcement).
 - Every one of them maps to exactly one active CRM account under Bellhaven after review, and every CRM account that claimed to be Bellhaven but isn't on the site was dealt with.
 - The pipeline proposed **29 changes**: 13 field fixes or direct re-parents, 2 changes of ownership under the billing SOP, 1 sale with billing preserved, 7 duplicates, 4 new accounts, and 2 accounts flagged as no longer on the website.
-- Review decisions: _fill in, e.g. "approved 28, rejected 1 (reason)"_.
+- Review decisions: **approved 29, rejected 0.** I reviewed every card and didn't disagree with any. The closest call was Ashtabula, where the CRM's PO Box could have been a deliberate billing address. Since the billing address is the CRM's only address field and acts as the facility location, I approved the correction. In the demo I rejected Ashtabula to show the flow (rejection is remembered and skipped on re-run), then reopened and approved it. A final read-only run against the live CRM produced **0 proposals**.
 
 ## Matching approach
 **Address is the identity and the name is just a label.** Facilities get renamed on every acquisition ("Sunny Acres Retirement Home" → "Bellhaven Willow Creek", "Cedar Trail of Zanesville" → "Bellhaven of Zanesville"), but they don't move. So:
@@ -50,4 +48,4 @@ I used Claude Code as the builder and acted as the reviewer and decision-maker:
 6. **Notifications.** A daily Slack or email digest with the count of new proposals and a link to the queue.
 
 ## Time spent
-_Fill in honestly: e.g. "~X hours, including Y for review and the demo recording."_
+About 1 hour 45 minutes in total, including the review and the demo recording.
